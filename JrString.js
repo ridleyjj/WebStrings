@@ -4,7 +4,7 @@ class JrString {
     pullPoint;
     isMouseAbove;
 
-    sinOsc = 0; // for oscillating the string
+    sinRamp = 0; // for oscillating the string
     midPoint;
     maxAmplitude;
     currentAmplitude = 0;
@@ -15,7 +15,7 @@ class JrString {
     _absIncrement = 0.1;
     increment = this._absIncrement;
 
-    isOscillating = false;
+    isVibrating = false;
     isTriggering = false;
 
     constructor(startPoint, length, thickness = 3) {
@@ -37,11 +37,11 @@ class JrString {
     lastTriggerTime = 0;
 
     triggerString(intensity = 1, direction) {
-        if (this.isOscillating && millis() - this.lastTriggerTime < this.triggerDelay) return;
+        if (this.isVibrating && millis() - this.lastTriggerTime < this.triggerDelay) return;
 
         this.increment = this._absIncrement * (direction ? -1 : 1);
-        this.sinOsc = 0;
-        this.isOscillating = true;
+        this.sinRamp = 0;
+        this.isVibrating = true;
         this.lastTriggerTime = millis();
         this.isTriggering = true;
         this.triggerTarget = this.maxAmplitude * intensity
@@ -63,8 +63,8 @@ class JrString {
     }
 
     calculatePullPoint() {
-        this.sinOsc += this.increment;
-        this.pullPoint.y = this.midPoint.y + sin(this.sinOsc) * this.currentAmplitude;
+        this.sinRamp += this.increment;
+        this.pullPoint.y = this.midPoint.y + sin(this.sinRamp) * this.currentAmplitude;
         if (this.isTriggering) {
             // ramp out to target amplitude
             this.currentAmplitude += 10;
