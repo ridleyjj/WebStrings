@@ -16,6 +16,7 @@ class JrString {
     increment = this._absIncrement;
 
     isOscillating = false;
+    isTriggering = false;
 
     constructor(startPoint, length, thickness = 3) {
         this.thickness = thickness;
@@ -39,10 +40,11 @@ class JrString {
         if (this.isOscillating && millis() - this.lastTriggerTime < this.triggerDelay) return;
 
         this.increment = this._absIncrement * (direction ? -1 : 1);
-        this.currentAmplitude = this.maxAmplitude * intensity;
         this.sinOsc = 0;
         this.isOscillating = true;
         this.lastTriggerTime = millis();
+        this.isTriggering = true;
+        this.triggerTarget = this.maxAmplitude * intensity
     }
 
     draw() {
@@ -63,7 +65,17 @@ class JrString {
     calculatePullPoint() {
         this.sinOsc += this.increment;
         this.pullPoint.y = this.midPoint.y + sin(this.sinOsc) * this.currentAmplitude;
-        this.currentAmplitude *= this.damping;
+        if (this.isTriggering) {
+            // ramp out to target amplitude
+            this.currentAmplitude += 10;
+            if (this.currentAmplitude >= this.triggerTarget) {
+                this.currentAmplitude = this.triggerTarget;
+                this.isTriggering = false;
+            }
+        } else {
+            // dampen
+            this.currentAmplitude *= this.damping;
+        }
         if (this.currentAmplitude != 0 && this.currentAmplitude < 1) {
             this.currentAmplitude = 0;
             this.isOscillating = false;
