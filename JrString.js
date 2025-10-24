@@ -28,9 +28,10 @@ class JrString {
         );
         this.pullPoint = this.midPoint.copy();
 
-        this.maxAmplitude = length * 0.25;
+        this.maxAmplitude = length * 0.12;
 
         this.isMouseAbove = this.isPointAboveString(mouseX, mouseY);
+    }
     }
 
     triggerDelay = 100; // ms
@@ -39,12 +40,14 @@ class JrString {
     triggerString(intensity = 1, direction) {
         if (this.isVibrating && millis() - this.lastTriggerTime < this.triggerDelay) return;
 
+        this.pullPoint.x = mouseX;
+
         this.increment = this._absIncrement * (direction ? -1 : 1);
         this.sinRamp = 0;
         this.isVibrating = true;
         this.lastTriggerTime = millis();
         this.isTriggering = true;
-        this.triggerTarget = this.maxAmplitude * intensity
+        this.triggerTarget = constrain(this.currentAmplitude + (this.maxAmplitude * intensity), 0, this.maxAmplitude);
     }
 
     draw() {
@@ -58,7 +61,7 @@ class JrString {
 
         beginShape();
         vertex(this.stringStart.x, this.stringStart.y);
-        let test = bezierVertex(this.pullPoint.x, this.pullPoint.y, this.pullPoint.x, this.pullPoint.y, this.stringEnd.x, this.stringEnd.y);
+        bezierVertex(this.pullPoint.x, this.pullPoint.y, this.pullPoint.x, this.pullPoint.y, this.stringEnd.x, this.stringEnd.y);
         endShape();
     }
 
@@ -83,7 +86,11 @@ class JrString {
     }
 
     isPointAboveString(x, y) {
-        return y < (this.pullPoint.y - this.midPoint.y) * sin((x - this.stringStart.x) * PI / (this.stringEnd.x - this.stringStart.x)) + this.midPoint.y;
+        const p0 = this.stringStart;
+        const p1 = this.pullPoint;
+        const p2 = this.stringEnd;
+
+        return JrQuadraticHelpers.isPointAboveQuadraticBezier(x, y, p0, p1, p2);
     }
 
     checkForStringTrigger() {
@@ -98,10 +105,11 @@ class JrString {
             return; // not moving vertically
 
         let currentlyAboveString = this.isPointAboveString(mouseX, mouseY);
-        let previouslyAboveString = this.isPointAboveString(pmouseX, pmouseY);
+        let previouslyAboveString = this.isMouseAbove;
         if (currentlyAboveString != previouslyAboveString) {
             this.triggerString(mouseSpeedY, currentlyAboveString);
         }
-    }
 
+        this.isMouseAbove = currentlyAboveString;
+    }
 }
