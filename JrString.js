@@ -17,6 +17,7 @@ class JrString {
 
     isVibrating = false;
     isTriggering = false;
+    mouseAbsent = false;
 
     constructor(startPoint, length, thickness = 3) {
         this.thickness = thickness;
@@ -30,8 +31,19 @@ class JrString {
 
         this.maxAmplitude = length * 0.12;
 
-        this.isMouseAbove = this.isPointAboveString(mouseX, mouseY);
+        this.resetMousePosition();
     }
+
+    /**
+     * Reset mouse tracking for this string.
+     * If x,y are provided they should be canvas-local coordinates (same space as p5 mouseX/mouseY).
+     * This avoids relying on p5's mouseX being updated when using DOM mouseenter events.
+     */
+    resetMousePosition(x, y) {
+        const mx = (typeof x === 'number') ? x : mouseX;
+        const my = (typeof y === 'number') ? y : mouseY;
+        this.isMouseAbove = this.isPointAboveString(mx, my);
+        this.mouseAbsent = false;
     }
 
     triggerDelay = 100; // ms
@@ -94,6 +106,10 @@ class JrString {
     }
 
     checkForStringTrigger() {
+        if (this.mouseAbsent) {
+            return;
+        }
+
         if (mouseX < this.stringStart.x || mouseX > this.stringEnd.x)
             return; // outside string horizontal bounds
 
